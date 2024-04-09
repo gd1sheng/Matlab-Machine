@@ -1,13 +1,13 @@
-%%  Çå¿Õ»·¾³±äÁ¿
-warning off             % ¹Ø±Õ±¨¾¯ĞÅÏ¢
-close all               % ¹Ø±Õ¿ªÆôµÄÍ¼´°
-clear                   % Çå¿Õ±äÁ¿
-clc                     % Çå¿ÕÃüÁîĞĞ
+%%  æ¸…ç©ºç¯å¢ƒå˜é‡
+warning off             % å…³é—­æŠ¥è­¦ä¿¡æ¯
+close all               % å…³é—­å¼€å¯çš„å›¾çª—
+clear                   % æ¸…ç©ºå˜é‡
+clc                     % æ¸…ç©ºå‘½ä»¤è¡Œ
 
-%%  µ¼ÈëÊı¾İ
-res = xlsread('Êı¾İ¼¯.xlsx');
+%%  å¯¼å…¥æ•°æ®
+res = xlsread('æ•°æ®é›†.xlsx');
 
-%%  »®·ÖÑµÁ·¼¯ºÍ²âÊÔ¼¯
+%%  åˆ’åˆ†è®­ç»ƒé›†å’Œæµ‹è¯•é›†
 temp = randperm(103);
 
 P_train = res(temp(1: 80), 1: 7)';
@@ -18,99 +18,99 @@ P_test = res(temp(81: end), 1: 7)';
 T_test = res(temp(81: end), 8)';
 N = size(P_test, 2);
 
-%%  Êı¾İ¹éÒ»»¯
+%%  æ•°æ®å½’ä¸€åŒ–
 [p_train, ps_input] = mapminmax(P_train, 0, 1);
 p_test = mapminmax('apply', P_test, ps_input);
 
 [t_train, ps_output] = mapminmax(T_train, 0, 1);
 t_test = mapminmax('apply', T_test, ps_output);
 
-%%  ×ªÖÃÒÔÊÊÓ¦Ä£ĞÍ
+%%  è½¬ç½®ä»¥é€‚åº”æ¨¡å‹
 p_train = p_train'; p_test = p_test';
 t_train = t_train'; t_test = t_test';
 
-%%  ÑµÁ·Ä£ĞÍ
-trees = 100;                                      % ¾ö²ßÊ÷ÊıÄ¿
-leaf  = 5;                                        % ×îĞ¡Ò¶×ÓÊı
-OOBPrediction = 'on';                             % ´ò¿ªÎó²îÍ¼
-OOBPredictorImportance = 'on';                    % ¼ÆËãÌØÕ÷ÖØÒªĞÔ
-Method = 'regression';                            % ·ÖÀà»¹ÊÇ»Ø¹é
+%%  è®­ç»ƒæ¨¡å‹
+trees = 100;                                      % å†³ç­–æ ‘æ•°ç›®
+leaf  = 5;                                        % æœ€å°å¶å­æ•°
+OOBPrediction = 'on';                             % æ‰“å¼€è¯¯å·®å›¾
+OOBPredictorImportance = 'on';                    % è®¡ç®—ç‰¹å¾é‡è¦æ€§
+Method = 'regression';                            % åˆ†ç±»è¿˜æ˜¯å›å½’
 net = TreeBagger(trees, p_train, t_train, 'OOBPredictorImportance', OOBPredictorImportance,...
       'Method', Method, 'OOBPrediction', OOBPrediction, 'minleaf', leaf);
-importance = net.OOBPermutedPredictorDeltaError;  % ÖØÒªĞÔ
+importance = net.OOBPermutedPredictorDeltaError;  % é‡è¦æ€§
 
-%%  ·ÂÕæ²âÊÔ
+%%  ä»¿çœŸæµ‹è¯•
 t_sim1 = predict(net, p_train);
 t_sim2 = predict(net, p_test );
 
-%%  Êı¾İ·´¹éÒ»»¯
+%%  æ•°æ®åå½’ä¸€åŒ–
 T_sim1 = mapminmax('reverse', t_sim1, ps_output);
 T_sim2 = mapminmax('reverse', t_sim2, ps_output);
 
-%%  ¾ù·½¸ùÎó²î
+%%  å‡æ–¹æ ¹è¯¯å·®
 error1 = sqrt(sum((T_sim1' - T_train).^2) ./ M);
 error2 = sqrt(sum((T_sim2' - T_test ).^2) ./ N);
 
-%%  »æÍ¼
+%%  ç»˜å›¾
 figure
 plot(1: M, T_train, 'r-*', 1: M, T_sim1, 'b-o', 'LineWidth', 1)
-legend('ÕæÊµÖµ', 'Ô¤²âÖµ')
-xlabel('Ô¤²âÑù±¾')
-ylabel('Ô¤²â½á¹û')
-string = {'ÑµÁ·¼¯Ô¤²â½á¹û¶Ô±È'; ['RMSE=' num2str(error1)]};
+legend('çœŸå®å€¼', 'é¢„æµ‹å€¼')
+xlabel('é¢„æµ‹æ ·æœ¬')
+ylabel('é¢„æµ‹ç»“æœ')
+string = {'è®­ç»ƒé›†é¢„æµ‹ç»“æœå¯¹æ¯”'; ['RMSE=' num2str(error1)]};
 title(string)
 xlim([1, M])
 grid
 
 figure
 plot(1: N, T_test, 'r-*', 1: N, T_sim2, 'b-o', 'LineWidth', 1)
-legend('ÕæÊµÖµ', 'Ô¤²âÖµ')
-xlabel('Ô¤²âÑù±¾')
-ylabel('Ô¤²â½á¹û')
-string = {'²âÊÔ¼¯Ô¤²â½á¹û¶Ô±È'; ['RMSE=' num2str(error2)]};
+legend('çœŸå®å€¼', 'é¢„æµ‹å€¼')
+xlabel('é¢„æµ‹æ ·æœ¬')
+ylabel('é¢„æµ‹ç»“æœ')
+string = {'æµ‹è¯•é›†é¢„æµ‹ç»“æœå¯¹æ¯”'; ['RMSE=' num2str(error2)]};
 title(string)
 xlim([1, N])
 grid
 
-%%  »æÖÆÎó²îÇúÏß
+%%  ç»˜åˆ¶è¯¯å·®æ›²çº¿
 figure
 plot(1: trees, oobError(net), 'b-', 'LineWidth', 1)
-legend('Îó²îÇúÏß')
-xlabel('¾ö²ßÊ÷ÊıÄ¿')
-ylabel('Îó²î')
+legend('è¯¯å·®æ›²çº¿')
+xlabel('å†³ç­–æ ‘æ•°ç›®')
+ylabel('è¯¯å·®')
 xlim([1, trees])
 grid
 
-%%  »æÖÆÌØÕ÷ÖØÒªĞÔ
+%%  ç»˜åˆ¶ç‰¹å¾é‡è¦æ€§
 figure
 bar(importance)
-legend('ÖØÒªĞÔ')
-xlabel('ÌØÕ÷')
-ylabel('ÖØÒªĞÔ')
+legend('é‡è¦æ€§')
+xlabel('ç‰¹å¾')
+ylabel('é‡è¦æ€§')
 
-%%  Ïà¹ØÖ¸±ê¼ÆËã
+%%  ç›¸å…³æŒ‡æ ‡è®¡ç®—
 % R2
 R1 = 1 - norm(T_train - T_sim1')^2 / norm(T_train - mean(T_train))^2;
 R2 = 1 - norm(T_test  - T_sim2')^2 / norm(T_test  - mean(T_test ))^2;
 
-disp(['ÑµÁ·¼¯Êı¾İµÄR2Îª£º', num2str(R1)])
-disp(['²âÊÔ¼¯Êı¾İµÄR2Îª£º', num2str(R2)])
+disp(['è®­ç»ƒé›†æ•°æ®çš„R2ä¸ºï¼š', num2str(R1)])
+disp(['æµ‹è¯•é›†æ•°æ®çš„R2ä¸ºï¼š', num2str(R2)])
 
 % MAE
 mae1 = sum(abs(T_sim1' - T_train)) ./ M;
 mae2 = sum(abs(T_sim2' - T_test )) ./ N;
 
-disp(['ÑµÁ·¼¯Êı¾İµÄMAEÎª£º', num2str(mae1)])
-disp(['²âÊÔ¼¯Êı¾İµÄMAEÎª£º', num2str(mae2)])
+disp(['è®­ç»ƒé›†æ•°æ®çš„MAEä¸ºï¼š', num2str(mae1)])
+disp(['æµ‹è¯•é›†æ•°æ®çš„MAEä¸ºï¼š', num2str(mae2)])
 
 % MBE
 mbe1 = sum(T_sim1' - T_train) ./ M ;
 mbe2 = sum(T_sim2' - T_test ) ./ N ;
 
-disp(['ÑµÁ·¼¯Êı¾İµÄMBEÎª£º', num2str(mbe1)])
-disp(['²âÊÔ¼¯Êı¾İµÄMBEÎª£º', num2str(mbe2)])
+disp(['è®­ç»ƒé›†æ•°æ®çš„MBEä¸ºï¼š', num2str(mbe1)])
+disp(['æµ‹è¯•é›†æ•°æ®çš„MBEä¸ºï¼š', num2str(mbe2)])
 
-%%  »æÖÆÉ¢µãÍ¼
+%%  ç»˜åˆ¶æ•£ç‚¹å›¾
 sz = 25;
 c = 'b';
 
@@ -118,18 +118,18 @@ figure
 scatter(T_train, T_sim1, sz, c)
 hold on
 plot(xlim, ylim, '--k')
-xlabel('ÑµÁ·¼¯ÕæÊµÖµ');
-ylabel('ÑµÁ·¼¯Ô¤²âÖµ');
+xlabel('è®­ç»ƒé›†çœŸå®å€¼');
+ylabel('è®­ç»ƒé›†é¢„æµ‹å€¼');
 xlim([min(T_train) max(T_train)])
 ylim([min(T_sim1) max(T_sim1)])
-title('ÑµÁ·¼¯Ô¤²âÖµ vs. ÑµÁ·¼¯ÕæÊµÖµ')
+title('è®­ç»ƒé›†é¢„æµ‹å€¼ vs. è®­ç»ƒé›†çœŸå®å€¼')
 
 figure
 scatter(T_test, T_sim2, sz, c)
 hold on
 plot(xlim, ylim, '--k')
-xlabel('²âÊÔ¼¯ÕæÊµÖµ');
-ylabel('²âÊÔ¼¯Ô¤²âÖµ');
+xlabel('æµ‹è¯•é›†çœŸå®å€¼');
+ylabel('æµ‹è¯•é›†é¢„æµ‹å€¼');
 xlim([min(T_test) max(T_test)])
 ylim([min(T_sim2) max(T_sim2)])
-title('²âÊÔ¼¯Ô¤²âÖµ vs. ²âÊÔ¼¯ÕæÊµÖµ')
+title('æµ‹è¯•é›†é¢„æµ‹å€¼ vs. æµ‹è¯•é›†çœŸå®å€¼')
